@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.perplexhub</groupId>
 	<artifactId>rsql</artifactId>
-	<version>5.0.10-SNAPSHOT</version>
+	<version>5.0.17-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>io.github.perplexhub - RSQL</name>
 	<inceptionYear>2018</inceptionYear>
@@ -97,6 +97,7 @@
 					<serverId>ossrh</serverId>
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
 					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					<stagingProgressTimeoutMinutes>60</stagingProgressTimeoutMinutes>
 				</configuration>
 			</plugin>
 			<plugin>

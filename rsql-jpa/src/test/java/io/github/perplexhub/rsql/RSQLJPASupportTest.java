@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.JoinType;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -48,6 +49,47 @@ public class RSQLJPASupportTest {
 
 	@Autowired
 	private TrunkGroupRepository trunkGroupRepository;
+
+	@Test
+	public final void testJoinHints() {
+		// use left join by default for one to many
+		String rsql = "projects.departmentName==someDepartmentName";
+		List<User> users = userRepository.findAll(toSpecification(rsql, true));
+		long count = users.size();
+		log.info("rsql: {} -> count: {}", rsql, count);
+		assertThat(rsql, count, is(1l));
+
+		// change to inner join
+		Map<String, JoinType> joinHints = new HashMap<String, JoinType>() {{put("User.projects", JoinType.INNER);}};
+		users = userRepository.findAll(toSpecification(rsql, true,null, joinHints));
+		count = users.size();
+		log.info("rsql: {} -> count: {}", rsql, count);
+		assertThat(rsql, count, is(1l));
+	}
+
+	@Test
+	public final void testCustomPredicateIsNull() {
+		String rsql = "city=notAssigned=''";
+		RSQLCustomPredicate<String> customPredicate = new RSQLCustomPredicate<>(new ComparisonOperator("=notAssigned="), String.class, input -> {
+			return input.getCriteriaBuilder().isNull(input.getRoot().get("city"));
+		});
+		List<User> users = userRepository.findAll(toSpecification(rsql, Arrays.asList(customPredicate)));
+		long count = users.size();
+		log.info("rsql: {} -> count: {}", rsql, count);
+		assertThat(rsql, count, is(11l));
+	}
+
+	@Test
+	public final void testCustomPredicateBetween() {
+		String rsql = "company.id=between=(2,3)";
+		RSQLCustomPredicate<Long> customPredicate = new RSQLCustomPredicate<>(new ComparisonOperator("=between=", true), Long.class, input -> {
+			return input.getCriteriaBuilder().between(input.getPath().as(Long.class), (Long) input.getArguments().get(0), (Long) input.getArguments().get(1));
+		});
+		List<User> users = userRepository.findAll(toSpecification(rsql, Arrays.asList(customPredicate)));
+		long count = users.size();
+		log.info("rsql: {} -> count: {}", rsql, count);
+		assertThat(rsql, count, is(6l));
+	}
 
 	@Test
 	public final void testCustomPredicate() {
